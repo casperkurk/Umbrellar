@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Umbrellar</string>
+    <string name="open_weather_maps_app_id">f071526db742a94be9d121a37641cf1a</string>
 </resources>
