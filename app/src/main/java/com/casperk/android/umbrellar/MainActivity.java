@@ -1,27 +1,30 @@
 package com.casperk.android.umbrellar;
 
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import com.casperk.android.umbrellar.models.Weather;
+import com.casperk.android.umbrellar.utilities.NetworkUtils;
+import com.casperk.android.umbrellar.utilities.WeatherDescriptionMapper;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 public class MainActivity extends AppCompatActivity {
 
     private EditText mSearchWeatherForCityEditText;
     private ProgressBar mLoadingIndicator;
-    private TextView mWeatherResultTest;
+    private TextView mErrorMessageTextView;
+    private TextView mWeatherForecastAdviceTextView;
+    private ImageView mWeatherIconImageView;
+    private String _errorMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,10 +33,12 @@ public class MainActivity extends AppCompatActivity {
 
         mSearchWeatherForCityEditText = findViewById(R.id.search_weather_city_input);
         mLoadingIndicator = findViewById(R.id.pb_loading_indicator);
-        mWeatherResultTest = findViewById(R.id.weather_result_test);
+        mErrorMessageTextView = findViewById(R.id.error_message);
+        mWeatherForecastAdviceTextView = findViewById(R.id.weather_forecast_advice);
+        mWeatherIconImageView = findViewById(R.id.weather_icon);
     }
 
-    public void getWeatherForCity(View view) {
+    public void getWeatherForCityButtonClick(View view) {
         if (mSearchWeatherForCityEditText.getText().length() == 0) {
             return;
         }
@@ -41,68 +46,80 @@ public class MainActivity extends AppCompatActivity {
         new GetWeatherTask().execute(mSearchWeatherForCityEditText.getText().toString());
     }
 
-    private void getWeatherDataForCity() {
-
-    }
-
-    public class GetWeatherTask extends AsyncTask<String, Void, JSONObject> {
-        private static final String OPEN_WEATHER_MAP_API = "http://api.openweathermap.org/data/2.5/forecast?q=%s,BE&units=metric";
+    public class GetWeatherTask extends AsyncTask<String, Void, Weather> {
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            mWeatherIconImageView.setVisibility(View.INVISIBLE);
+            mWeatherForecastAdviceTextView.setVisibility(View.INVISIBLE);
             mLoadingIndicator.setVisibility(View.VISIBLE);
+            mErrorMessageTextView.setVisibility(View.INVISIBLE);
         }
 
         @Override
-        protected JSONObject doInBackground(String... params) {
-            //&appid=f071526db742a94be9d121a37641cf1a
-
-            /* If there's no zip code, there's nothing to look up. */
+        protected Weather doInBackground(String... params) {
             if (params.length == 0) {
                 return null;
             }
 
             String city = params[0];
-            URL weatherRequestUrl = null;
-
+            Weather weather;
             try {
-                weatherRequestUrl = new URL(String.format(OPEN_WEATHER_MAP_API, city));
-                HttpURLConnection connection = (HttpURLConnection) weatherRequestUrl.openConnection();
-                connection.addRequestProperty("x-api-key", getString(R.string.open_weather_maps_app_id));
-
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-                StringBuffer json = new StringBuffer(1024);
-                String tmp="";
-                while((tmp=reader.readLine()) != null)
-                    json.append(tmp).append("\n");
-                reader.close();
-
-                JSONObject data = new JSONObject(json.toString());
-
-                // This value will be 404 if the request was not
-                // successful
-                if(data.getInt("cod") != 200){
-                    return null;
-                }
-
-                return data;
-
+                weather = NetworkUtils.getCurrentWeatherForCity(city, MainActivity.this, mErrorMessageTextView);
+            } catch (java.io.FileNotFoundException e) {
+                e.printStackTrace();
+                _errorMessage = "Kon de ingevoerde stad niet vinden. Probeer het eens in het Engels";
+                return null;
             } catch (Exception e) {
                 e.printStackTrace();
+                _errorMessage = "Oeps, er is iets mis gegaan";
                 return null;
             }
+
+            return weather;
         }
 
         @Override
-        protected void onPostExecute(JSONObject weatherData) {
+        protected void onPostExecute(Weather weather) {
             mLoadingIndicator.setVisibility(View.INVISIBLE);
-            if (weatherData != null) {
-                mWeatherResultTest.setText(weatherData.toString());
-            } else {
-                mWeatherResultTest.setText("Oeps, er is iets mis gegaan.");
+            if (weather == null) {
+                mErrorMessageTextView.setVisibility(View.VISIBLE);
+                if (_errorMessage != null) {
+                    mErrorMessageTextView.setText(_errorMessage);
+                } else {
+                    _errorMessage = "Oeps, er is iets mis gegaan";
+                    mErrorMessageTextView.setText(_errorMessage);
+                }
+
+                return;
             }
+
+            String iconId = weather.getWeatherConditions().get(0).getIcon();
+            String weatherIconUrl = NetworkUtils.getWeatherIconUrl(iconId);
+            loadWeatherIconFromUrl(weatherIconUrl);
+            mWeatherIconImageView.setVisibility(View.VISIBLE);
+
+            int weatherDescriptionId = weather.getWeatherConditions().get(0).getId();
+            String weatherDescription = WeatherDescriptionMapper.getDescription(weatherDescriptionId);
+            mWeatherForecastAdviceTextView.setText(weatherDescription);
+            mWeatherForecastAdviceTextView.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void loadWeatherIconFromUrl(String url) {
+        Picasso.with(this).load(url)
+                .error(R.mipmap.ic_launcher)
+                .into(mWeatherIconImageView, new Callback() {
+                    @Override
+                    public void onSuccess() {
+
+                    }
+
+                    @Override
+                    public void onError() {
+
+                    }
+                });
     }
 }
