@@ -1,6 +1,6 @@
 package com.casperk.android.umbrellar.utilities;
 
-import com.casperk.android.umbrellar.models.Weather;
+import com.casperk.android.umbrellar.models.WeatherForecast;
 import com.casperk.android.umbrellar.models.WeatherCondition;
 
 import org.json.JSONArray;
@@ -14,11 +14,11 @@ import java.util.ArrayList;
  */
 
 public class WeatherMapper {
-    public static Weather mapToWeather(JSONObject weatherData) throws JSONException {
+    public static WeatherForecast mapToWeather(JSONObject weatherData) throws JSONException {
         JSONArray weatherConditionsJson = weatherData.getJSONArray("weather");
         ArrayList<WeatherCondition> weatherConditions = mapToWeatherConditions(weatherConditionsJson);
 
-        return new Weather(weatherConditions);
+        return new WeatherForecast(weatherConditions);
     }
 
     public static ArrayList<WeatherCondition> mapToWeatherConditions(JSONArray weatherConditionsJson) throws JSONException {

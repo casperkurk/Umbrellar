@@ -4,7 +4,7 @@ import android.content.Context;
 import android.widget.TextView;
 
 import com.casperk.android.umbrellar.R;
-import com.casperk.android.umbrellar.models.Weather;
+import com.casperk.android.umbrellar.models.WeatherForecast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,7 +13,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -26,7 +25,11 @@ public class NetworkUtils {
     private static final String OPEN_WEATHER_MAP_WEATHER_ICON_URL = "http://openweathermap.org/img/w/%s.png";
 
 
-    public static Weather getCurrentWeatherForCity(String city, Context context, TextView errorMessageTextView) throws IOException, JSONException {
+    public static String getWeatherForecastForFiveDaysUrl(String city) {
+        return String.format(OPEN_WEATHER_MAP_5_DAYS_FORECAST_URL, city);
+    }
+
+    public static WeatherForecast getCurrentWeatherForCity(String city, Context context, TextView errorMessageTextView) throws IOException, JSONException {
         URL weatherRequestUrl = new URL(getCurrentWeatherForCityUrl(city));
 
         HttpURLConnection connection = (HttpURLConnection) weatherRequestUrl.openConnection();
@@ -39,9 +42,9 @@ public class NetworkUtils {
             return null;
         }
 
-        Weather weather = WeatherMapper.mapToWeather(weatherData);
+        WeatherForecast weatherForecast = WeatherMapper.mapToWeather(weatherData);
 
-        return weather;
+        return weatherForecast;
     }
 
     private static String getCurrentWeatherForCityUrl(String city) {
