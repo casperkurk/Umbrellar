@@ -49,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
         mSearchWeatherForCityEditText = findViewById(R.id.search_weather_city_input);
         mLoadingIndicator = findViewById(R.id.pb_loading_indicator);
         mErrorMessageTextView = findViewById(R.id.error_message);
-        mWeatherForecastAdviceTextView = findViewById(R.id.weather_forecast_advice);
-        mWeatherIconImageView = findViewById(R.id.weather_icon);
+        /*mWeatherForecastAdviceTextView = findViewById(R.id.weather_forecast_advice);
+        mWeatherIconImageView = findViewById(R.id.weather_icon);*/
 
         LinearLayoutManager layoutManager
                 = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
