@@ -1,4 +1,4 @@
-package com.casperk.android.umbrellar;
+package com.casperk.android.umbrellar.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -8,14 +8,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.casperk.android.umbrellar.R;
 import com.casperk.android.umbrellar.models.WeatherCondition;
 import com.casperk.android.umbrellar.models.WeatherForecast;
-import com.casperk.android.umbrellar.utilities.NetworkUtils;
-import com.casperk.android.umbrellar.utilities.WeatherDescriptionMapper;
+import com.casperk.android.umbrellar.utilities.WeatherMapper;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Caspernicus on 4/03/2018.
@@ -23,11 +24,13 @@ import java.util.ArrayList;
 
 public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ForecastAdapterViewHolder> {
 
-    private ArrayList<WeatherForecast> mWeatherForecastForFiveDays;
+    private List<WeatherForecast> mWeatherForecastForFiveDays;
     private Context parentContext;
+    private final ForecastAdapterOnClickHandler mClickHandler;
 
-    public ForecastAdapter() {
+    public ForecastAdapter(ForecastAdapterOnClickHandler clickHandler) {
 
+        mClickHandler = clickHandler;
     }
 
     @Override
@@ -47,19 +50,18 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
         WeatherForecast weatherForecastForThreeHours = mWeatherForecastForFiveDays.get(position);
         WeatherCondition firstWeatherCondition = weatherForecastForThreeHours.getWeatherConditions().get(0);
 
-        String iconId = firstWeatherCondition.getIcon();
-        String weatherIconUrl = NetworkUtils.getWeatherIconUrl(iconId);
-        loadWeatherIconFromUrl(forecastAdapterViewHolder.mWeatherIconImageView, weatherIconUrl);
+        int weatherIconResourceId = WeatherMapper.getWeatherIconResourceId(firstWeatherCondition.getId());
+        loadWeatherIconFromResourceId(forecastAdapterViewHolder.mWeatherIconImageView, weatherIconResourceId);
 
-        forecastAdapterViewHolder.mForecastDateTextView.setText(weatherForecastForThreeHours.getForecastDateAsString());
+        String[] splittedDateTime = weatherForecastForThreeHours.getForecastDateAsString().split(" ");
+        String time = splittedDateTime[1].substring(0, splittedDateTime[1].length() - 3);
 
-        String advice = WeatherDescriptionMapper.getDescription(firstWeatherCondition.getId());
-        String weatherForecastSummary = firstWeatherCondition.getDescription() + ": " + advice;
-        forecastAdapterViewHolder.mForecastSummaryTextView.setText(weatherForecastSummary);
+        forecastAdapterViewHolder.mForecastTimeTextView.setText(time);
+        forecastAdapterViewHolder.mForecastDateTextView.setText(splittedDateTime[0]);
     }
 
-    private void loadWeatherIconFromUrl(ImageView imageView, String url) {
-        Picasso.with(parentContext).load(url)
+    private void loadWeatherIconFromResourceId(ImageView imageView, int weatherIconResourceId) {
+        Picasso.with(parentContext).load(weatherIconResourceId)
                 .error(R.mipmap.ic_launcher)
                 .into(imageView, new Callback() {
                     @Override
@@ -81,16 +83,24 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
         return mWeatherForecastForFiveDays.size();
     }
 
-    public class ForecastAdapterViewHolder extends RecyclerView.ViewHolder {
-        public final TextView mForecastSummaryTextView;
+    public class ForecastAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public final ImageView mWeatherIconImageView;
+        public final TextView mForecastTimeTextView;
         public final TextView mForecastDateTextView;
 
         public ForecastAdapterViewHolder(View itemView) {
             super(itemView);
-            mForecastSummaryTextView = itemView.findViewById(R.id.weather_forecast_summary);
             mWeatherIconImageView = itemView.findViewById(R.id.weather_forecast_icon);
-            mForecastDateTextView = itemView.findViewById(R.id.weather_forecast_date);
+            mForecastTimeTextView = itemView.findViewById(R.id.tv_weather_forecast_time);
+            mForecastDateTextView = itemView.findViewById(R.id.tv_weather_forecast_date);
+            itemView.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            int adapterPosition = getAdapterPosition();
+            WeatherForecast weatherForOneDay = mWeatherForecastForFiveDays.get(adapterPosition);
+            mClickHandler.onClick(weatherForOneDay);
         }
     }
 

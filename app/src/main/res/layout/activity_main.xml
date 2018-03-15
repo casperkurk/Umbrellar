@@ -47,7 +47,7 @@
             android:layout_height="wrap_content"
             android:textSize="14sp"
             android:layout_marginHorizontal="25dp"
-            android:id="@+id/error_message" />
+            android:id="@+id/tv_error_message" />
 
     </LinearLayout>
 

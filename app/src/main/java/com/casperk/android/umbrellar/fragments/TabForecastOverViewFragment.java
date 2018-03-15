@@ -1,5 +1,7 @@
 package com.casperk.android.umbrellar.fragments;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -21,8 +23,11 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.casperk.android.umbrellar.ForecastAdapter;
+import com.casperk.android.umbrellar.adapters.ForecastAdapter;
+import com.casperk.android.umbrellar.adapters.ForecastAdapterOnClickHandler;
 import com.casperk.android.umbrellar.R;
+import com.casperk.android.umbrellar.WeatherDetailActivity;
+import com.casperk.android.umbrellar.models.WeatherForecast;
 import com.casperk.android.umbrellar.models.WeatherForecastForFiveDays;
 import com.casperk.android.umbrellar.utilities.NetworkUtils;
 import com.google.gson.Gson;
@@ -35,7 +40,7 @@ import java.util.Map;
  * Created by Caspernicus on 10/03/2018.
  */
 
-public class TabForecastOverViewFragment extends Fragment {
+public class TabForecastOverViewFragment extends Fragment implements ForecastAdapterOnClickHandler {
     private static final String TAG = "TabForecastOverViewFragment";
 
     private RecyclerView mRecyclerView;
@@ -60,7 +65,7 @@ public class TabForecastOverViewFragment extends Fragment {
         mRecyclerView = view.findViewById(R.id.recyclerview_forecast);
         mSearchWeatherForCityEditText = view.findViewById(R.id.search_weather_city_input);
         mLoadingIndicator = view.findViewById(R.id.pb_loading_indicator);
-        mErrorMessageTextView = view.findViewById(R.id.error_message);
+        mErrorMessageTextView = view.findViewById(R.id.tv_error_message);
         mGetWeatherButton = view.findViewById(R.id.button_getweather);
        /* mWeatherForecastAdviceTextView = view.findViewById(R.id.weather_forecast_advice);
         mWeatherIconImageView = view.findViewById(R.id.weather_icon);*/
@@ -70,7 +75,7 @@ public class TabForecastOverViewFragment extends Fragment {
         mRecyclerView.setLayoutManager(layoutManager);
         //mRecyclerView.setHasFixedSize(true);
 
-        mForecastAdapter = new ForecastAdapter();
+        mForecastAdapter = new ForecastAdapter(this);
         mRecyclerView.setAdapter(mForecastAdapter);
 
         mGetWeatherButton.setOnClickListener(new View.OnClickListener() {
@@ -84,6 +89,8 @@ public class TabForecastOverViewFragment extends Fragment {
     }
 
     public void handleWeatherForCityButtonClick(View view) {
+        mLoadingIndicator.setVisibility(View.VISIBLE);
+        mErrorMessageTextView.setVisibility(View.GONE);
         if (mSearchWeatherForCityEditText.getText().length() == 0) {
             return;
         }
@@ -113,19 +120,39 @@ public class TabForecastOverViewFragment extends Fragment {
     private final Response.Listener<String> onForecastLoaded = new Response.Listener<String>() {
         @Override
         public void onResponse(String response) {
-            WeatherForecastForFiveDays weatherForecast = gson.fromJson(response, WeatherForecastForFiveDays.class);
+            mLoadingIndicator.setVisibility(View.GONE);
             mRecyclerView.setVisibility(View.VISIBLE);
+            WeatherForecastForFiveDays weatherForecast = gson.fromJson(response, WeatherForecastForFiveDays.class);
             mForecastAdapter.setWeatherForecastForFiveDays(weatherForecast.getWeatherForecastForecastForFiveDays());
 
-            Log.i("PostActivity", "forecast geladen.");
+            Log.i(TAG, "Forecast geladen.");
         }
     };
 
     private final Response.ErrorListener onForecastError = new Response.ErrorListener() {
         @Override
         public void onErrorResponse(VolleyError error) {
+            mLoadingIndicator.setVisibility(View.GONE);
+            mErrorMessageTextView.setVisibility(View.VISIBLE);
             mRecyclerView.setVisibility(View.INVISIBLE);
-            Log.e("PostActivity", error.toString());
+
+            String errorMessage;
+            if (error.networkResponse.statusCode == 404)
+                errorMessage = "Kon de weersvoorspelling voor de opgegeven stad niet vinden. Probeer het eens in het Engels.";
+            else
+                errorMessage = "Er is iets fout gegaan. Probeer het later nog eens.";
+
+            mErrorMessageTextView.setText(errorMessage);
+            Log.e(TAG, error.toString());
         }
     };
+
+    @Override
+    public void onClick(WeatherForecast weatherForOneDay) {
+        Context context = getContext();
+        Class weatherDetailClass = WeatherDetailActivity.class;
+        Intent intentToStartWeatherDetailActivity = new Intent(context, weatherDetailClass);
+        intentToStartWeatherDetailActivity.putExtra("WeatherForOneDay_JSON", gson.toJson(weatherForOneDay));
+        startActivity(intentToStartWeatherDetailActivity);
+    }
 }

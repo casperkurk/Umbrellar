@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.casperk.android.umbrellar.fragments.TabForecastOverViewFragment;
 import com.casperk.android.umbrellar.fragments.TabScheduleFragment;
+import com.casperk.android.umbrellar.models.WeatherForecast;
 
 public class Main2Activity extends AppCompatActivity {
 

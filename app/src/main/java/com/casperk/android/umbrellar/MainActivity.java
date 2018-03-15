@@ -17,6 +17,9 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.casperk.android.umbrellar.adapters.ForecastAdapter;
+import com.casperk.android.umbrellar.adapters.ForecastAdapterOnClickHandler;
+import com.casperk.android.umbrellar.models.WeatherForecast;
 import com.casperk.android.umbrellar.models.WeatherForecastForFiveDays;
 import com.casperk.android.umbrellar.utilities.NetworkUtils;
 import com.google.gson.Gson;
@@ -25,7 +28,7 @@ import com.google.gson.GsonBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ForecastAdapterOnClickHandler {
 
     private RecyclerView mRecyclerView;
     private ForecastAdapter mForecastAdapter;
@@ -48,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView = findViewById(R.id.recyclerview_forecast);
         mSearchWeatherForCityEditText = findViewById(R.id.search_weather_city_input);
         mLoadingIndicator = findViewById(R.id.pb_loading_indicator);
-        mErrorMessageTextView = findViewById(R.id.error_message);
+        mErrorMessageTextView = findViewById(R.id.tv_error_message);
         /*mWeatherForecastAdviceTextView = findViewById(R.id.weather_forecast_advice);
         mWeatherIconImageView = findViewById(R.id.weather_icon);*/
 
@@ -57,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(layoutManager);
         //mRecyclerView.setHasFixedSize(true);
 
-        mForecastAdapter = new ForecastAdapter();
+        mForecastAdapter = new ForecastAdapter(this);
         mRecyclerView.setAdapter(mForecastAdapter);
     }
 
@@ -106,6 +109,11 @@ public class MainActivity extends AppCompatActivity {
             Log.e("PostActivity", error.toString());
         }
     };
+
+    @Override
+    public void onClick(WeatherForecast weatherForOneDay) {
+
+    }
 
     /*public class GetWeatherTask extends AsyncTask<String, Void, WeatherForecast> {
 
@@ -163,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
             mWeatherIconImageView.setVisibility(View.VISIBLE);
 
             int weatherDescriptionId = weatherForecast.getWeatherConditions().get(0).getId();
-            String weatherDescription = WeatherDescriptionMapper.getDescription(weatherDescriptionId);
+            String weatherDescription = WeatherMapper.getDescription(weatherDescriptionId);
             mWeatherForecastAdviceTextView.setText(weatherDescription);
             mWeatherForecastAdviceTextView.setVisibility(View.VISIBLE);
         }

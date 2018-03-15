@@ -29,7 +29,7 @@ public class NetworkUtils {
         return String.format(OPEN_WEATHER_MAP_5_DAYS_FORECAST_URL, city);
     }
 
-    public static WeatherForecast getCurrentWeatherForCity(String city, Context context, TextView errorMessageTextView) throws IOException, JSONException {
+    /*public static WeatherForecast getCurrentWeatherForCity(String city, Context context, TextView errorMessageTextView) throws IOException, JSONException {
         URL weatherRequestUrl = new URL(getCurrentWeatherForCityUrl(city));
 
         HttpURLConnection connection = (HttpURLConnection) weatherRequestUrl.openConnection();
@@ -45,7 +45,7 @@ public class NetworkUtils {
         WeatherForecast weatherForecast = WeatherMapper.mapToWeather(weatherData);
 
         return weatherForecast;
-    }
+    }*/
 
     private static String getCurrentWeatherForCityUrl(String city) {
         return String.format(OPEN_WEATHER_MAP_CURRENT_WEATHER_URL, city);
