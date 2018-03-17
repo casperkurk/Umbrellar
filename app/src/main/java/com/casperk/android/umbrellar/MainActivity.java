@@ -1,195 +1,86 @@
 package com.casperk.android.umbrellar;
 
-import android.os.Bundle;
+import android.content.DialogInterface;
+import android.support.design.widget.TabLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+
+import android.support.v4.view.ViewPager;
+import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
-import android.view.View;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
-import com.casperk.android.umbrellar.adapters.ForecastAdapter;
-import com.casperk.android.umbrellar.adapters.ForecastAdapterOnClickHandler;
-import com.casperk.android.umbrellar.models.WeatherForecast;
-import com.casperk.android.umbrellar.models.WeatherForecastForFiveDays;
-import com.casperk.android.umbrellar.utilities.NetworkUtils;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.casperk.android.umbrellar.fragments.TabForecastOverViewFragment;
+import com.casperk.android.umbrellar.fragments.TabScheduleFragment;
+import com.casperk.android.umbrellar.models.CityPreference;
 
-import java.util.HashMap;
-import java.util.Map;
+public class MainActivity extends AppCompatActivity {
 
-public class MainActivity extends AppCompatActivity implements ForecastAdapterOnClickHandler {
-
-    private RecyclerView mRecyclerView;
-    private ForecastAdapter mForecastAdapter;
-
-    private EditText mSearchWeatherForCityEditText;
-    private ProgressBar mLoadingIndicator;
-    private TextView mErrorMessageTextView;
-    private TextView mWeatherForecastAdviceTextView;
-    private ImageView mWeatherIconImageView;
-    private String _errorMessage;
-
-    private RequestQueue requestQueue;
-    private Gson gson;
+    private static final String TAG = "MainActivity";
+    private SectionsPageAdapter mSectionsPageAdapter;
+    private ViewPager mViewPager;
+    private SectionsPageAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.d(TAG, "onCreate: Starting");
 
-        mRecyclerView = findViewById(R.id.recyclerview_forecast);
-        mSearchWeatherForCityEditText = findViewById(R.id.search_weather_city_input);
-        mLoadingIndicator = findViewById(R.id.pb_loading_indicator);
-        mErrorMessageTextView = findViewById(R.id.tv_error_message);
-        /*mWeatherForecastAdviceTextView = findViewById(R.id.weather_forecast_advice);
-        mWeatherIconImageView = findViewById(R.id.weather_icon);*/
+        mSectionsPageAdapter = new SectionsPageAdapter(getSupportFragmentManager());
 
-        LinearLayoutManager layoutManager
-                = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        mRecyclerView.setLayoutManager(layoutManager);
-        //mRecyclerView.setHasFixedSize(true);
+        mViewPager = findViewById(R.id.container);
+        setupViewPager(mViewPager);
 
-        mForecastAdapter = new ForecastAdapter(this);
-        mRecyclerView.setAdapter(mForecastAdapter);
+        TabLayout tabLayout = findViewById(R.id.tabs);
+        tabLayout.setupWithViewPager(mViewPager);
     }
 
-    public void getWeatherForCityButtonClick(View view) {
-        if (mSearchWeatherForCityEditText.getText().length() == 0) {
-            return;
-        }
-
-        requestQueue = Volley.newRequestQueue(this);
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.setDateFormat("yyyy-MM-dd hh:mm:ss");
-        gson = gsonBuilder.create();
-
-        fetchWeatherForecastForFiveDays(mSearchWeatherForCityEditText.getText().toString());
+    private void setupViewPager(ViewPager viewPager) {
+        adapter = new SectionsPageAdapter(getSupportFragmentManager());
+        adapter.addFragment(new TabForecastOverViewFragment(), "Overzicht");
+        adapter.addFragment(new TabScheduleFragment(), "Planner");
+        viewPager.setAdapter(adapter);
     }
-
-    private void fetchWeatherForecastForFiveDays(String city) {
-        StringRequest request = new StringRequest(com.android.volley.Request.Method.GET, NetworkUtils.getWeatherForecastForFiveDaysUrl(city), onForecastLoaded, onForecastError) {
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String, String>  params = new HashMap<>();
-                params.put("x-api-key", getString(R.string.open_weather_maps_app_id));
-
-                return params;
-            }
-        };
-
-        requestQueue.add(request);
-    }
-
-    private final Response.Listener<String> onForecastLoaded = new Response.Listener<String>() {
-        @Override
-        public void onResponse(String response) {
-            WeatherForecastForFiveDays weatherForecast = gson.fromJson(response, WeatherForecastForFiveDays.class);
-            mRecyclerView.setVisibility(View.VISIBLE);
-            mForecastAdapter.setWeatherForecastForFiveDays(weatherForecast.getWeatherForecastForecastForFiveDays());
-
-            Log.i("PostActivity", "forecast geladen.");
-        }
-    };
-
-    private final Response.ErrorListener onForecastError = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error) {
-            mRecyclerView.setVisibility(View.INVISIBLE);
-            Log.e("PostActivity", error.toString());
-        }
-    };
 
     @Override
-    public void onClick(WeatherForecast weatherForOneDay) {
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_prefered_city, menu);
 
+        return true;
     }
 
-    /*public class GetWeatherTask extends AsyncTask<String, Void, WeatherForecast> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mWeatherIconImageView.setVisibility(View.INVISIBLE);
-            mWeatherForecastAdviceTextView.setVisibility(View.INVISIBLE);
-            mLoadingIndicator.setVisibility(View.VISIBLE);
-            mErrorMessageTextView.setVisibility(View.INVISIBLE);
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.menu_change_city){
+            showInputDialog();
         }
-
-        @Override
-        protected WeatherForecast doInBackground(String... params) {
-            if (params.length == 0) {
-                return null;
-            }
-
-            String city = params[0];
-            WeatherForecast weatherForecast;
-
-            try {
-                weatherForecast = NetworkUtils.getCurrentWeatherForCity(city, MainActivity.this, mErrorMessageTextView);
-            } catch (java.io.FileNotFoundException e) {
-                e.printStackTrace();
-                _errorMessage = "Kon de ingevoerde stad niet vinden. Probeer het eens in het Engels";
-                return null;
-            } catch (Exception e) {
-                e.printStackTrace();
-                _errorMessage = "Oeps, er is iets mis gegaan";
-                return null;
-            }
-
-            return weatherForecast;
-        }
-
-        @Override
-        protected void onPostExecute(WeatherForecast weatherForecast) {
-            mLoadingIndicator.setVisibility(View.INVISIBLE);
-            if (weatherForecast == null) {
-                mErrorMessageTextView.setVisibility(View.VISIBLE);
-                if (_errorMessage != null) {
-                    mErrorMessageTextView.setText(_errorMessage);
-                } else {
-                    _errorMessage = "Oeps, er is iets mis gegaan";
-                    mErrorMessageTextView.setText(_errorMessage);
-                }
-
-                return;
-            }
-
-            String iconId = weatherForecast.getWeatherConditions().get(0).getIcon();
-            String weatherIconUrl = NetworkUtils.getWeatherIconUrl(iconId);
-            loadWeatherIconFromUrl(weatherIconUrl);
-            mWeatherIconImageView.setVisibility(View.VISIBLE);
-
-            int weatherDescriptionId = weatherForecast.getWeatherConditions().get(0).getId();
-            String weatherDescription = WeatherMapper.getDescription(weatherDescriptionId);
-            mWeatherForecastAdviceTextView.setText(weatherDescription);
-            mWeatherForecastAdviceTextView.setVisibility(View.VISIBLE);
-        }
+        return false;
     }
 
-    private void loadWeatherIconFromUrl(String url) {
-        Picasso.with(this).load(url)
-                .error(R.mipmap.ic_launcher)
-                .into(mWeatherIconImageView, new Callback() {
-                    @Override
-                    public void onSuccess() {
+    private void showInputDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Geef een stad in");
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                changeCity(input.getText().toString());
+            }
+        });
+        builder.show();
+    }
 
-                    }
-
-                    @Override
-                    public void onError() {
-
-                    }
-                });
-    }*/
+    private void changeCity(String city){
+        TabForecastOverViewFragment overviewFragment = (TabForecastOverViewFragment) adapter.getItem(0);
+        overviewFragment.loadWeatherForecastForCity(city);
+        new CityPreference(this).setCity(city);
+    }
 }

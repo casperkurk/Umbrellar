@@ -26,6 +26,8 @@ public class WeatherForecast {
 
     private Wind wind;
 
+    private City city;
+
     public WeatherForecast(ArrayList<WeatherCondition> weatherConditions) {
         this.weatherConditions = weatherConditions;
     }
@@ -76,5 +78,13 @@ public class WeatherForecast {
 
     public void setWind(Wind wind) {
         this.wind = wind;
+    }
+
+    public City getCity() {
+        return city;
+    }
+
+    public void setCity(City city) {
+        this.city = city;
     }
 }

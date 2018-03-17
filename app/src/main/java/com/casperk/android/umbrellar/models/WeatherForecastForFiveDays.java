@@ -14,7 +14,7 @@ public class WeatherForecastForFiveDays {
     private String httpRequestMessage;
 
     @SerializedName("list")
-    private ArrayList<WeatherForecast> weatherForecastForecastForFiveDays;
+    private ArrayList<WeatherForecast> forecastForFiveDays;
 
     private City city;
 
@@ -26,12 +26,12 @@ public class WeatherForecastForFiveDays {
         this.httpRequestMessage = httpRequestMessage;
     }
 
-    public ArrayList<WeatherForecast> getWeatherForecastForecastForFiveDays() {
-        return weatherForecastForecastForFiveDays;
+    public ArrayList<WeatherForecast> getForecastForFiveDays() {
+        return forecastForFiveDays;
     }
 
-    public void setWeatherForecastForecastForFiveDays(ArrayList<WeatherForecast> weatherForecastForecastForFiveDays) {
-        this.weatherForecastForecastForFiveDays = weatherForecastForecastForFiveDays;
+    public void setForecastForFiveDays(ArrayList<WeatherForecast> forecastForFiveDays) {
+        this.forecastForFiveDays = forecastForFiveDays;
     }
 
     public City getCity() {

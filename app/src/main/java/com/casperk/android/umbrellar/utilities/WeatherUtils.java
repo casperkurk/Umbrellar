@@ -7,11 +7,11 @@ import com.casperk.android.umbrellar.R;
  * zie https://openweathermap.org/weather-conditions voor informatie over de weerdata
  */
 
-public class WeatherMapper {
-    private static final String NEEM_PARAPLU_MEE = "Het regent. Neem een paraplu mee!";
-    private static final String GEEN_PARAPLU_NODIG = "Je hebt geen paraplu nodig.";
+public class WeatherUtils {
+    public static final String NEEM_PARAPLU_MEE = "Het gaat regenen. Vergeet je paraplu niet!";
+    public static final String GEEN_PARAPLU_NODIG = "Je hebt geen paraplu nodig.";
 
-    public static String getDescription(int weatherId) {
+    public static String getAdvice(int weatherId) {
         switch (weatherId) {
             case 200 :
             case 201 :
@@ -40,6 +40,10 @@ public class WeatherMapper {
             case 531 : return NEEM_PARAPLU_MEE;
             default : return GEEN_PARAPLU_NODIG;
         }
+    }
+
+    public static boolean mustBringUmbrella(int weatherId) {
+        return getAdvice(weatherId).equals(NEEM_PARAPLU_MEE);
     }
 
     public static int getWeatherIconResourceId(int weatherId) {

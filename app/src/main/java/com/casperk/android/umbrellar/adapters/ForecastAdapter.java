@@ -11,11 +11,12 @@ import android.widget.TextView;
 import com.casperk.android.umbrellar.R;
 import com.casperk.android.umbrellar.models.WeatherCondition;
 import com.casperk.android.umbrellar.models.WeatherForecast;
-import com.casperk.android.umbrellar.utilities.WeatherMapper;
-import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
+import com.casperk.android.umbrellar.utilities.RenderUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -50,30 +51,48 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
         WeatherForecast weatherForecastForThreeHours = mWeatherForecastForFiveDays.get(position);
         WeatherCondition firstWeatherCondition = weatherForecastForThreeHours.getWeatherConditions().get(0);
 
-        int weatherIconResourceId = WeatherMapper.getWeatherIconResourceId(firstWeatherCondition.getId());
-        loadWeatherIconFromResourceId(forecastAdapterViewHolder.mWeatherIconImageView, weatherIconResourceId);
+        RenderUtils.renderWeatherIconFromResourceId(parentContext, forecastAdapterViewHolder.mWeatherIconImageView, firstWeatherCondition.getId());
 
-        String[] splittedDateTime = weatherForecastForThreeHours.getForecastDateAsString().split(" ");
-        String time = splittedDateTime[1].substring(0, splittedDateTime[1].length() - 3);
+        /*SimpleDateFormat simpleDateFormat_Date = new SimpleDateFormat("d");
+        String date = simpleDateFormat_Date.format(new Date(weatherForecastForThreeHours.getForecastDate() * 1000));*/
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date(weatherForecastForThreeHours.getForecastDate() * 1000));
+        int bleh = Calendar.DAY_OF_WEEK;
+        String dayOfWeek = getDayOfWeek(calendar.get(Calendar.DAY_OF_WEEK));
+        SimpleDateFormat simpleDateFormat_Time = new SimpleDateFormat("HH:mm");
+        String time = simpleDateFormat_Time.format(new Date(weatherForecastForThreeHours.getForecastDate() * 1000));
 
         forecastAdapterViewHolder.mForecastTimeTextView.setText(time);
-        forecastAdapterViewHolder.mForecastDateTextView.setText(splittedDateTime[0]);
+        forecastAdapterViewHolder.mForecastDateTextView.setText(dayOfWeek);
+        forecastAdapterViewHolder.mForecastTemperatureTextView.setText(String.format("%s ℃", Math.round(weatherForecastForThreeHours.getMainWeatherInfo().getTemp())));
     }
 
-    private void loadWeatherIconFromResourceId(ImageView imageView, int weatherIconResourceId) {
-        Picasso.with(parentContext).load(weatherIconResourceId)
-                .error(R.mipmap.ic_launcher)
-                .into(imageView, new Callback() {
-                    @Override
-                    public void onSuccess() {
-
-                    }
-
-                    @Override
-                    public void onError() {
-
-                    }
-                });
+    private String getDayOfWeek(int day) {
+        String dayAsString = "";
+        switch (day) {
+            case 1:
+                dayAsString = "Zondag";
+                break;
+            case 2:
+                dayAsString = "Maandag";
+                break;
+            case 3:
+                dayAsString = "Dinsdag";
+                break;
+            case 4:
+                dayAsString = "Woensdag";
+                break;
+            case 5:
+                dayAsString = "Donderdag";
+                break;
+            case 6:
+                dayAsString = "Vrijdag";
+                break;
+            case 7:
+                dayAsString = "Zaterdag";
+                break;
+        }
+        return dayAsString;
     }
 
     @Override
@@ -87,12 +106,14 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
         public final ImageView mWeatherIconImageView;
         public final TextView mForecastTimeTextView;
         public final TextView mForecastDateTextView;
+        public final TextView mForecastTemperatureTextView;
 
         public ForecastAdapterViewHolder(View itemView) {
             super(itemView);
             mWeatherIconImageView = itemView.findViewById(R.id.weather_forecast_icon);
             mForecastTimeTextView = itemView.findViewById(R.id.tv_weather_forecast_time);
             mForecastDateTextView = itemView.findViewById(R.id.tv_weather_forecast_date);
+            mForecastTemperatureTextView = itemView.findViewById(R.id.tv_weather_forecast_temp);
             itemView.setOnClickListener(this);
         }
 

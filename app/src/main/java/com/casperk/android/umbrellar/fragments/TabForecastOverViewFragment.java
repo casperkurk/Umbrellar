@@ -1,5 +1,6 @@
 package com.casperk.android.umbrellar.fragments;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
@@ -27,6 +28,8 @@ import com.casperk.android.umbrellar.adapters.ForecastAdapter;
 import com.casperk.android.umbrellar.adapters.ForecastAdapterOnClickHandler;
 import com.casperk.android.umbrellar.R;
 import com.casperk.android.umbrellar.WeatherDetailActivity;
+import com.casperk.android.umbrellar.models.City;
+import com.casperk.android.umbrellar.models.CityPreference;
 import com.casperk.android.umbrellar.models.WeatherForecast;
 import com.casperk.android.umbrellar.models.WeatherForecastForFiveDays;
 import com.casperk.android.umbrellar.utilities.NetworkUtils;
@@ -50,6 +53,7 @@ public class TabForecastOverViewFragment extends Fragment implements ForecastAda
     private Button mGetWeatherButton;
     private ProgressBar mLoadingIndicator;
     private TextView mErrorMessageTextView;
+    private TextView mCityTextView;
     private TextView mWeatherForecastAdviceTextView;
     private ImageView mWeatherIconImageView;
     private String _errorMessage;
@@ -67,8 +71,7 @@ public class TabForecastOverViewFragment extends Fragment implements ForecastAda
         mLoadingIndicator = view.findViewById(R.id.pb_loading_indicator);
         mErrorMessageTextView = view.findViewById(R.id.tv_error_message);
         mGetWeatherButton = view.findViewById(R.id.button_getweather);
-       /* mWeatherForecastAdviceTextView = view.findViewById(R.id.weather_forecast_advice);
-        mWeatherIconImageView = view.findViewById(R.id.weather_icon);*/
+        mCityTextView = view.findViewById(R.id.tv_overview_city);
 
         LinearLayoutManager layoutManager
                 = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
@@ -85,22 +88,31 @@ public class TabForecastOverViewFragment extends Fragment implements ForecastAda
             }
         });
 
+        String preferedCity = new CityPreference(getActivity()).getCity();
+        loadWeatherForecastForCity(preferedCity);
+
         return view;
+    }
+
+    public void loadWeatherForecastForCity(String city) {
+        setupVolleyAndGson();
+        fetchWeatherForecastForFiveDays(city);
     }
 
     public void handleWeatherForCityButtonClick(View view) {
         mLoadingIndicator.setVisibility(View.VISIBLE);
-        mErrorMessageTextView.setVisibility(View.GONE);
         if (mSearchWeatherForCityEditText.getText().length() == 0) {
             return;
         }
 
+        loadWeatherForecastForCity(mSearchWeatherForCityEditText.getText().toString());
+    }
+
+    private void setupVolleyAndGson() {
         requestQueue = Volley.newRequestQueue(getActivity());
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.setDateFormat("yyyy-MM-dd hh:mm:ss");
         gson = gsonBuilder.create();
-
-        fetchWeatherForecastForFiveDays(mSearchWeatherForCityEditText.getText().toString());
     }
 
     private void fetchWeatherForecastForFiveDays(String city) {
@@ -118,18 +130,27 @@ public class TabForecastOverViewFragment extends Fragment implements ForecastAda
     }
 
     private final Response.Listener<String> onForecastLoaded = new Response.Listener<String>() {
+        @SuppressLint("LongLogTag")
         @Override
         public void onResponse(String response) {
+            mErrorMessageTextView.setVisibility(View.GONE);
             mLoadingIndicator.setVisibility(View.GONE);
             mRecyclerView.setVisibility(View.VISIBLE);
-            WeatherForecastForFiveDays weatherForecast = gson.fromJson(response, WeatherForecastForFiveDays.class);
-            mForecastAdapter.setWeatherForecastForFiveDays(weatherForecast.getWeatherForecastForecastForFiveDays());
+            final WeatherForecastForFiveDays weatherForecast = gson.fromJson(response, WeatherForecastForFiveDays.class);
+
+            mCityTextView.setText(weatherForecast.getCity().getName().toUpperCase());
+
+            for (WeatherForecast forecast: weatherForecast.getForecastForFiveDays()) {
+                forecast.setCity(weatherForecast.getCity());
+            }
+            mForecastAdapter.setWeatherForecastForFiveDays(weatherForecast.getForecastForFiveDays());
 
             Log.i(TAG, "Forecast geladen.");
         }
     };
 
     private final Response.ErrorListener onForecastError = new Response.ErrorListener() {
+        @SuppressLint("LongLogTag")
         @Override
         public void onErrorResponse(VolleyError error) {
             mLoadingIndicator.setVisibility(View.GONE);

@@ -30,4 +30,5 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.2'
     compile 'com.android.volley:volley:1.0.0'
     compile 'com.android.support:design:26.1.0'
+    compile 'com.github.tittojose:timerangepicker-library:0.2'
 }
